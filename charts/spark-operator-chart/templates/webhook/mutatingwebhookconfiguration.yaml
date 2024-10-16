@@ -21,6 +21,10 @@ metadata:
   name: {{ include "spark-operator.webhook.name" . }}
   labels:
     {{- include "spark-operator.webhook.labels" . | nindent 4 }}
+  {{- if and .Values.webhook.certManager.enabled .Values.webhook.certManager.addInjectorAnnotations }}
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "spark-operator.webhook.name" . }}
+  {{- end }}
 webhooks:
 - name: mutate--v1-pod.sparkoperator.k8s.io
   admissionReviewVersions: ["v1"]

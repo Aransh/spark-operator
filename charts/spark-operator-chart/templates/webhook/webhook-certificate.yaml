@@ -1,0 +1,29 @@
+{{- if and .Values.webhook.enable .Values.webhook.certManager.enabled .Values.webhook.certManager.cert.create }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "spark-operator.webhook.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "spark-operator.webhook.labels" . | nindent 4 }}
+  {{- with .Values.webhook.certManager.cert.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  commonName: {{ include "spark-operator.webhook.serviceName" . }}
+  dnsNames:
+    - {{ include "spark-operator.webhook.serviceName" . }}
+    - {{ include "spark-operator.webhook.serviceName" . }}.{{ .Release.Namespace }}
+    - {{ include "spark-operator.webhook.serviceName" . }}.{{ .Release.Namespace }}.svc
+  issuerRef:
+    {{- toYaml .Values.webhook.certManager.cert.issuerRef | nindent 4 }}
+  {{- with .Values.webhook.certManager.cert.duration }}
+  duration: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.webhook.certManager.cert.renewBefore }}
+  renewBefore: {{ . | quote }}
+  {{- end }}
+  secretName: {{ include "spark-operator.webhook.name" . }}
+{{- end }}
