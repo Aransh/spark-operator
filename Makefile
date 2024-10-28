@@ -52,6 +52,7 @@ LOCALBIN ?= $(shell pwd)/bin
 KUSTOMIZE_VERSION ?= v5.4.1
 CONTROLLER_TOOLS_VERSION ?= v0.15.0
 KIND_VERSION ?= v0.23.0
+KIND_K8S_VERSION ?= v1.29.3
 ENVTEST_VERSION ?= release-0.18
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION ?= 1.29.3
@@ -108,7 +109,7 @@ print-%: ; @echo $*=$($*)
 
 .PHONY: manifests
 manifests: controller-gen ## Generate CustomResourceDefinition, RBAC and WebhookConfiguration manifests.
-	$(CONTROLLER_GEN) crd rbac:roleName=spark-operator-controller webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) crd:generateEmbeddedObjectMeta=true rbac:roleName=spark-operator-controller webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -249,7 +250,12 @@ endif
 .PHONY: kind-create-cluster
 kind-create-cluster: kind ## Create a kind cluster for integration tests.
 	if ! $(KIND) get clusters 2>/dev/null | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
-		$(KIND) create cluster --name $(KIND_CLUSTER_NAME) --config $(KIND_CONFIG_FILE) --kubeconfig $(KIND_KUBE_CONFIG) --wait=1m; \
+		$(KIND) create cluster \
+			--name $(KIND_CLUSTER_NAME) \
+			--config $(KIND_CONFIG_FILE) \
+			--image kindest/node:$(KIND_K8S_VERSION) \
+			--kubeconfig $(KIND_KUBE_CONFIG) \
+			--wait=1m; \
 	fi
 
 .PHONY: kind-load-image

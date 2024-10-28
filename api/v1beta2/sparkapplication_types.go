@@ -62,7 +62,6 @@ type SparkApplicationSpec struct {
 	// +optional
 	MainClass *string `json:"mainClass,omitempty"`
 	// MainFile is the path to a bundled JAR, Python, or R file of the application.
-	// +optional
 	MainApplicationFile *string `json:"mainApplicationFile"`
 	// Arguments is a list of arguments to be passed to the application.
 	// +optional
@@ -187,9 +186,9 @@ type SparkApplicationStatus struct {
 // SparkApplication is the Schema for the sparkapplications API
 type SparkApplication struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata"`
 
-	Spec   SparkApplicationSpec   `json:"spec,omitempty"`
+	Spec   SparkApplicationSpec   `json:"spec"`
 	Status SparkApplicationStatus `json:"status,omitempty"`
 }
 
@@ -280,15 +279,15 @@ type SparkUIConfiguration struct {
 	// ServicePort allows configuring the port at service level that might be different from the targetPort.
 	// TargetPort should be the same as the one defined in spark.ui.port
 	// +optional
-	ServicePort *int32 `json:"servicePort"`
+	ServicePort *int32 `json:"servicePort,omitempty"`
 	// ServicePortName allows configuring the name of the service port.
 	// This may be useful for sidecar proxies like Envoy injected by Istio which require specific ports names to treat traffic as proper HTTP.
 	// Defaults to spark-driver-ui-port.
 	// +optional
-	ServicePortName *string `json:"servicePortName"`
+	ServicePortName *string `json:"servicePortName,omitempty"`
 	// ServiceType allows configuring the type of the service. Defaults to ClusterIP.
 	// +optional
-	ServiceType *corev1.ServiceType `json:"serviceType"`
+	ServiceType *corev1.ServiceType `json:"serviceType,omitempty"`
 	// ServiceAnnotations is a map of key,value pairs of annotations that might be added to the service object.
 	// +optional
 	ServiceAnnotations map[string]string `json:"serviceAnnotations,omitempty"`
@@ -312,7 +311,7 @@ type DriverIngressConfiguration struct {
 	ServicePortName *string `json:"servicePortName"`
 	// ServiceType allows configuring the type of the service. Defaults to ClusterIP.
 	// +optional
-	ServiceType *corev1.ServiceType `json:"serviceType"`
+	ServiceType *corev1.ServiceType `json:"serviceType,omitempty"`
 	// ServiceAnnotations is a map of key,value pairs of annotations that might be added to the service object.
 	// +optional
 	ServiceAnnotations map[string]string `json:"serviceAnnotations,omitempty"`
@@ -410,6 +409,14 @@ type Dependencies struct {
 // SparkPodSpec defines common things that can be customized for a Spark driver or executor pod.
 // TODO: investigate if we should use v1.PodSpec and limit what can be set instead.
 type SparkPodSpec struct {
+	// Template is a pod template that can be used to define the driver or executor pod configurations that Spark configurations do not support.
+	// Spark version >= 3.0.0 is required.
+	// Ref: https://spark.apache.org/docs/latest/running-on-kubernetes.html#pod-template.
+	// +optional
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:validation:Type:=object
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Template *corev1.PodTemplateSpec `json:"template,omitempty"`
 	// Cores maps to `spark.driver.cores` or `spark.executor.cores` for the driver and executors, respectively.
 	// +optional
 	// +kubebuilder:validation:Minimum=1
